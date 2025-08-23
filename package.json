@@ -1,0 +1,43 @@
+{
+  "name": "expo-repro-cleanup",
+  "version": "0.0.1",
+  "description": "Cleanup issue reproducible example for Expo projects",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "expo-repro-cleanup": "./cli.ts"
+  },
+  "files": [
+    "cli.ts",
+    "src"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "test": "vitest run -c ./vite.config.ts"
+  },
+  "keywords": [
+    "expo",
+    "cleanup",
+    "repro",
+    "security"
+  ],
+  "author": "Kudo Chien",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kudo/expo-repro-cleanup/issues"
+  },
+  "homepage": "https://github.com/Kudo/expo-repro-cleanup#readme",
+  "devDependencies": {
+    "@types/bun": "^1.2.20",
+    "eslint": "^9.34.0",
+    "eslint-config-universe": "^15.0.3",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.3",
+    "picocolors": "^1.1.1"
+  }
+}
