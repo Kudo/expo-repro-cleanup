@@ -1,0 +1,59 @@
+name: Publish package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Run typecheck
+      run: bun run typecheck
+
+    - name: Run linter
+      run: bun run lint
+
+    - name: Run tests
+      run: bun run test
+
+    - name: Configure git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Bump version
+      run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+    - name: Commit version bump
+      run: |
+        git add package.json
+        git commit -m "chore: bump version to $(node -p "require('./package.json').version")"
+        git push
+
+    - name: Publish to npm
+      run: bun publish
+      env:
+        NODE_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
