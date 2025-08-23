@@ -14,7 +14,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "lint": "eslint src",
-    "test": "vitest run -c ./vite.config.ts"
+    "test": "vitest run -c ./vite.config.ts",
+    "typecheck": "tsc"
   },
   "keywords": [
     "expo",
