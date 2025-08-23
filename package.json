@@ -28,6 +28,9 @@
   "bugs": {
     "url": "https://github.com/Kudo/expo-repro-cleanup/issues"
   },
+  "repository": {
+    "url": "https://github.com/Kudo/expo-repro-cleanup"
+  },
   "homepage": "https://github.com/Kudo/expo-repro-cleanup#readme",
   "devDependencies": {
     "@types/bun": "^1.2.20",
