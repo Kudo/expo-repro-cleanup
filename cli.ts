@@ -11,14 +11,14 @@ function showHelp() {
 
 ${packageJson.description}
 
-Usage: expo-repro-cleanup [options] [project-path]
+Usage: expo-repro-cleanup [options] [project-root]
 
 Options:
   -h, --help     Show this help message
   --version      Show version number
 
 Arguments:
-  project-path   Path to the Expo project (default: current directory)`);
+  project-root   Path to the project (default: current directory)`);
 }
 
 async function main() {
@@ -47,7 +47,6 @@ async function main() {
     return;
   }
 
-  // Get project path from positionals (skip the first two which are bun and script path)
   const projectRoot = positionals[2] || process.cwd();
 
   try {
