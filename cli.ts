@@ -47,7 +47,9 @@ async function main() {
     return;
   }
 
-  const projectRoot = positionals[2] || process.cwd();
+  const entryPointIndex = positionals.findIndex((arg) => arg.endsWith('cli.ts'));
+  const args = entryPointIndex >= 0 ? positionals.slice(entryPointIndex + 1) : [];
+  const projectRoot = args[0] || process.cwd();
 
   try {
     await runCleanupAsync(projectRoot);
