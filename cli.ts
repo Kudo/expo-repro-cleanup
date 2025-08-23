@@ -1,10 +1,53 @@
 #!/usr/bin/env bun
 
 import pc from 'picocolors';
+import { parseArgs } from 'util';
+
+import packageJson from './package.json' with { type: 'json' };
 import { runCleanupAsync } from './src/index.js';
 
+function showHelp() {
+  console.log(`${pc.bold('expo-repro-cleanup')} v${packageJson.version}
+
+${packageJson.description}
+
+Usage: expo-repro-cleanup [options] [project-root]
+
+Options:
+  -h, --help     Show this help message
+  --version      Show version number
+
+Arguments:
+  project-root   Path to the project (default: current directory)`);
+}
+
 async function main() {
-  const projectRoot = process.argv[2] || process.cwd();
+  const { values, positionals } = parseArgs({
+    args: Bun.argv,
+    options: {
+      help: {
+        type: 'boolean',
+        short: 'h',
+      },
+      version: {
+        type: 'boolean',
+      },
+    },
+    strict: false,
+    allowPositionals: true,
+  });
+
+  if (values.version) {
+    console.log(packageJson.version);
+    return;
+  }
+
+  if (values.help) {
+    showHelp();
+    return;
+  }
+
+  const projectRoot = positionals[2] || process.cwd();
 
   try {
     await runCleanupAsync(projectRoot);
