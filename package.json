@@ -1,6 +1,6 @@
 {
   "name": "expo-repro-cleanup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cleanup issue reproducible example for Expo projects",
   "type": "module",
   "main": "src/index.ts",
