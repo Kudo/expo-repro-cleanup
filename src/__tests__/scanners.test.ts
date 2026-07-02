@@ -39,6 +39,52 @@ describe('scanDirectoryAsync', () => {
     expect(targets.every((t) => !t.autoRemove)).toBe(true);
   });
 
+  it('should not flag a pristine Expo config file', async () => {
+    const pristineBabel = `module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+`;
+    await fs.promises.writeFile(path.join(testDir, 'babel.config.js'), pristineBabel);
+
+    const targets = await scanDirectoryAsync(testDir);
+
+    expect(targets).toHaveLength(0);
+  });
+
+  it('should flag a customized config file', async () => {
+    const customBabel = `module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: ['react-native-reanimated/plugin'],
+  };
+};
+`;
+    await fs.promises.writeFile(path.join(testDir, 'babel.config.js'), customBabel);
+
+    const targets = await scanDirectoryAsync(testDir);
+
+    expect(targets).toHaveLength(1);
+    expect(targets[0].type).toBe('config');
+    expect(targets[0].description).toContain('babel.config.js');
+  });
+
+  it('should flag config files that have no known template', async () => {
+    await fs.promises.writeFile(
+      path.join(testDir, 'tsconfig.json'),
+      '{ "extends": "expo/tsconfig.base" }'
+    );
+
+    const targets = await scanDirectoryAsync(testDir);
+
+    expect(targets).toHaveLength(1);
+    expect(targets[0].type).toBe('config');
+    expect(targets[0].description).toContain('tsconfig.json');
+  });
+
   it('should detect app config files', async () => {
     await fs.promises.writeFile(path.join(testDir, 'app.config.js'), 'export default {}');
 

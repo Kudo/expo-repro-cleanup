@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import pc from 'picocolors';
 
+import { isPristineExpoTemplate } from './templates.js';
 import type { CleanupTarget } from './types.js';
 
 export async function scanDirectoryAsync(projectRoot: string): Promise<CleanupTarget[]> {
@@ -126,6 +127,10 @@ async function analyzeFileAsync(filename: string, filePath: string): Promise<Cle
 
   if (configFiles.includes(filename)) {
     const content = await fs.promises.readFile(filePath, 'utf-8');
+    if (isPristineExpoTemplate(filename, content)) {
+      // Untouched Expo default — nothing worth reviewing or removing.
+      return null;
+    }
     return {
       path: filePath,
       type: 'config',

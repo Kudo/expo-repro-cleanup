@@ -3,7 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import pc from 'picocolors';
 
-export async function checkAndMaybeRunPrebuildAsync(projectRoot: string): Promise<void> {
+import type { CleanupOptions } from './types.js';
+
+export async function checkAndMaybeRunPrebuildAsync(
+  projectRoot: string,
+  options: CleanupOptions
+): Promise<void> {
   try {
     const iosDir = path.join(projectRoot, 'ios');
     const androidDir = path.join(projectRoot, 'android');
@@ -27,9 +32,18 @@ export async function checkAndMaybeRunPrebuildAsync(projectRoot: string): Promis
       );
       console.log(pc.yellow('You can review changes with `git diff` after prebuild completes.'));
 
+      if (!options.prebuild) {
+        console.log(pc.yellow('Skipped prebuild (--no-prebuild).'));
+        return;
+      }
+
+      if (!options.interactive) {
+        await runPrebuildAsync(projectRoot);
+        return;
+      }
+
       const shouldPrebuild = await select({
-        message:
-          'Run `bash -c "yes | npx expo prebuild --clean"` to regenerate native directories?',
+        message: 'Run `expo prebuild --clean` to regenerate native directories?',
         choices: [
           { name: 'Yes, run prebuild --clean', value: 'yes' },
           { name: 'No, skip prebuild', value: 'no' },
@@ -51,8 +65,10 @@ async function runPrebuildAsync(projectRoot: string): Promise<void> {
   console.log(pc.blue('\n🔄 Running expo prebuild --clean...'));
 
   try {
-    const proc = Bun.spawn(['bash', '-c', 'yes | npx expo prebuild --clean'], {
+    // CI=1 makes `expo prebuild` skip its own prompts, so it can run unattended.
+    const proc = Bun.spawn(['npx', 'expo', 'prebuild', '--clean'], {
       cwd: projectRoot,
+      env: { ...process.env, CI: '1' },
       stdout: 'inherit',
       stderr: 'inherit',
     });

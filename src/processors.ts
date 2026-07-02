@@ -2,12 +2,27 @@ import { select } from '@inquirer/prompts';
 import fs from 'fs';
 import pc from 'picocolors';
 
-import type { CleanupTarget } from './types.js';
+import type { CleanupOptions, CleanupTarget } from './types.js';
 
-export async function processTargetAsync(target: CleanupTarget): Promise<'continue' | 'skip'> {
+// Parts of the repro itself — deleting these could break the reproduction, so in
+// auto-clean mode we keep them and print them for the user to review by hand.
+const KEEP_FOR_REVIEW_TYPES = new Set<CleanupTarget['type']>([
+  'source-file',
+  'app-config',
+  'package-scripts',
+]);
+
+export async function processTargetAsync(
+  target: CleanupTarget,
+  options: CleanupOptions
+): Promise<'continue' | 'skip'> {
   if (target.autoRemove) {
     await performCleanupAsync(target);
     return 'continue';
+  }
+
+  if (!options.interactive) {
+    return processNonInteractiveAsync(target);
   }
 
   console.log(pc.cyan(pc.bold(`\n📋 ${target.description}`)));
@@ -40,6 +55,25 @@ export async function processTargetAsync(target: CleanupTarget): Promise<'contin
     console.log(pc.green(`✅ Kept: ${target.description}`));
   }
 
+  return 'continue';
+}
+
+async function processNonInteractiveAsync(target: CleanupTarget): Promise<'continue'> {
+  console.log(pc.cyan(pc.bold(`\n📋 ${target.description}`)));
+  console.log(pc.gray(`Path: ${target.path}`));
+
+  if (KEEP_FOR_REVIEW_TYPES.has(target.type)) {
+    if (target.content) {
+      console.log(pc.gray('\nContent preview:'));
+      console.log(pc.white(target.content));
+    }
+    showWarnings(target);
+    console.log(pc.yellow(`📌 Kept for review (part of the repro): ${target.description}`));
+    return 'continue';
+  }
+
+  showWarnings(target);
+  await performCleanupAsync(target);
   return 'continue';
 }
 
