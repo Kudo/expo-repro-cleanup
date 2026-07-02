@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import pc from 'picocolors';
 
+import { isPristineExpoTemplate } from './templates.js';
 import type { CleanupTarget } from './types.js';
 
 export async function scanDirectoryAsync(projectRoot: string): Promise<CleanupTarget[]> {
@@ -29,6 +30,14 @@ export async function scanDirectoryAsync(projectRoot: string): Promise<CleanupTa
           description: 'VSCode settings directory (.vscode)',
           content: 'Contains IDE-specific settings and configurations',
           autoRemove: true,
+        });
+      } else if (stats.isDirectory() && file === '.claude') {
+        // Can hold hooks, MCP configs, custom commands, and agent instructions
+        // that run automatically once an AI agent opens the repo.
+        cleanupTargets.push({
+          path: filePath,
+          type: 'ai-config',
+          description: 'AI agent config directory (.claude)',
         });
       }
     }
@@ -75,6 +84,27 @@ async function scanGitDirectoryAsync(gitDir: string): Promise<CleanupTarget[]> {
 }
 
 async function analyzeFileAsync(filename: string, filePath: string): Promise<CleanupTarget | null> {
+  // AI coding agents auto-load these as instructions, so a malicious repro can use
+  // them to hijack the agent. We intentionally skip reading the content: echoing an
+  // untrusted instruction file to stdout could inject the very agent running this tool.
+  const aiInstructionFiles = ['CLAUDE.md', 'CLAUDE.local.md', 'AGENTS.md'];
+
+  if (aiInstructionFiles.includes(filename)) {
+    return {
+      path: filePath,
+      type: 'ai-instructions',
+      description: `AI agent instructions: ${filename}`,
+    };
+  }
+
+  if (filename === '.mcp.json') {
+    return {
+      path: filePath,
+      type: 'ai-config',
+      description: 'MCP server config: .mcp.json',
+    };
+  }
+
   const lockFiles = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb'];
 
   if (lockFiles.includes(filename)) {
@@ -97,6 +127,10 @@ async function analyzeFileAsync(filename: string, filePath: string): Promise<Cle
 
   if (configFiles.includes(filename)) {
     const content = await fs.promises.readFile(filePath, 'utf-8');
+    if (isPristineExpoTemplate(filename, content)) {
+      // Untouched Expo default — nothing worth reviewing or removing.
+      return null;
+    }
     return {
       path: filePath,
       type: 'config',

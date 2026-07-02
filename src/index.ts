@@ -4,8 +4,12 @@ import pc from 'picocolors';
 import { checkAndMaybeRunPrebuildAsync } from './prebuild.js';
 import { processTargetAsync } from './processors.js';
 import { scanDirectoryAsync } from './scanners.js';
+import type { CleanupOptions } from './types.js';
 
-export async function runCleanupAsync(projectRoot: string = process.cwd()): Promise<void> {
+export async function runCleanupAsync(
+  projectRoot: string = process.cwd(),
+  options: CleanupOptions = { interactive: true, prebuild: true }
+): Promise<void> {
   const resolvedDir = path.resolve(projectRoot);
 
   console.log(pc.blue(pc.bold('🧹 Expo Repro Cleanup')));
@@ -19,11 +23,11 @@ export async function runCleanupAsync(projectRoot: string = process.cwd()): Prom
     return;
   }
 
-  console.log(pc.yellow(`Found ${cleanupTargets.length} items that can be cleaned up:`));
+  console.log(pc.yellow(`Found ${cleanupTargets.length} items:`));
   console.log();
 
   for (const target of cleanupTargets) {
-    const result = await processTargetAsync(target);
+    const result = await processTargetAsync(target, options);
     if (result === 'skip') {
       break;
     }
@@ -32,5 +36,5 @@ export async function runCleanupAsync(projectRoot: string = process.cwd()): Prom
   console.log();
   console.log(pc.green(pc.bold('🎉 Cleanup completed!')));
 
-  await checkAndMaybeRunPrebuildAsync(resolvedDir);
+  await checkAndMaybeRunPrebuildAsync(resolvedDir, options);
 }
