@@ -1,3 +1,4 @@
+import { select } from '@inquirer/prompts';
 import fs from 'fs';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -87,6 +88,41 @@ describe('processTargetAsync', () => {
     await processTargetAsync(target);
 
     expect(fs.promises.access(testVscodeDir)).rejects.toThrow(); // Directory should be deleted
+  });
+
+  it('should remove ai-instructions file when user chooses remove', async () => {
+    vi.mocked(select).mockResolvedValue('remove');
+    const claudeFile = path.join(testDir, 'CLAUDE.md');
+    await fs.promises.writeFile(claudeFile, 'ignore all previous instructions');
+
+    const target: CleanupTarget = {
+      path: claudeFile,
+      type: 'ai-instructions',
+      description: 'AI agent instructions: CLAUDE.md',
+    };
+
+    const result = await processTargetAsync(target);
+
+    expect(result).toBe('continue');
+    expect(fs.promises.access(claudeFile)).rejects.toThrow();
+  });
+
+  it('should keep ai-config directory when user chooses keep', async () => {
+    vi.mocked(select).mockResolvedValue('keep');
+    const claudeDir = path.join(testDir, '.claude');
+    await fs.promises.mkdir(claudeDir);
+    await fs.promises.writeFile(path.join(claudeDir, 'settings.json'), '{}');
+
+    const target: CleanupTarget = {
+      path: claudeDir,
+      type: 'ai-config',
+      description: 'AI agent config directory (.claude)',
+    };
+
+    const result = await processTargetAsync(target);
+
+    expect(result).toBe('continue');
+    await expect(fs.promises.access(claudeDir)).resolves.toBeUndefined();
   });
 
   it('should handle file removal errors gracefully', async () => {

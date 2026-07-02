@@ -57,6 +57,21 @@ function showWarnings(target: CleanupTarget): void {
     console.log(pc.red('⚠️  STRONGLY RECOMMEND REMOVAL unless you trust the source.'));
   }
 
+  if (target.type === 'ai-instructions') {
+    console.log(pc.red(pc.bold('\n🤖 AI AGENT INSTRUCTIONS DETECTED - PROMPT INJECTION RISK')));
+    console.log(pc.yellow('AI coding agents auto-load this file as instructions.'));
+    console.log(pc.yellow('A malicious repro can use it to hijack the agent working on it.'));
+    console.log(pc.gray('Content preview hidden on purpose — reading it is the risk.'));
+    console.log(pc.red('⚠️  STRONGLY RECOMMEND REMOVAL unless you trust the source.'));
+  }
+
+  if (target.type === 'ai-config') {
+    console.log(pc.red(pc.bold('\n🤖 AI AGENT CONFIG DETECTED - CODE EXECUTION RISK')));
+    console.log(pc.yellow('Agent hooks and MCP server configs can run arbitrary commands'));
+    console.log(pc.yellow('automatically, with no model in the loop.'));
+    console.log(pc.red('⚠️  STRONGLY RECOMMEND REMOVAL unless you trust the source.'));
+  }
+
   if (target.type === 'source-file') {
     console.log(pc.yellow(pc.bold('\n📄 SOURCE FILE DETECTED')));
     if (target.description.includes('SUSPICIOUS PATTERNS DETECTED')) {

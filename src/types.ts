@@ -7,7 +7,9 @@ export interface CleanupTarget {
     | 'package-scripts'
     | 'app-config'
     | 'git-hook'
-    | 'source-file';
+    | 'source-file'
+    | 'ai-instructions'
+    | 'ai-config';
   description: string;
   content?: string;
   autoRemove?: boolean;
